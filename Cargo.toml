@@ -11,6 +11,7 @@ opt-level = 3
 lto = "thin"
 incremental = true
 panic = "unwind"
+debug = true
 
 [profile.dev]
 opt-level = 0

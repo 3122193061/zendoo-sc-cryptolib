@@ -30,6 +30,8 @@ use exception::*;
 use cctp_primitives::commitment_tree::proofs::{ScAbsenceProof, ScExistenceProof};
 use cctp_primitives::commitment_tree::CommitmentTree;
 
+use backtrace::Backtrace;
+
 fn read_raw_pointer<'a, T>(env: &JNIEnv, input: *const T) -> &'a T {
     if input.is_null() {
         throw_and_exit!(
@@ -88,6 +90,7 @@ fn deserialize_to_jobject<T: CanonicalDeserialize + SemanticallyValid>(
         .convert_byte_array(obj_bytes)
         .expect("Cannot read bytes.");
 
+    
     let obj = deserialize_from_buffer::<T>(
         obj_bytes.as_slice(),
         checked.map(|jni_bool| jni_bool == JNI_TRUE),
@@ -98,6 +101,7 @@ fn deserialize_to_jobject<T: CanonicalDeserialize + SemanticallyValid>(
         Ok(obj) => *return_jobject(&_env, obj, class_path),
         Err(e) => {
             eprintln!("{:?}", e);
+			eprintln!("{:?}", Backtrace::new());
             return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
         }
     }
@@ -684,12 +688,14 @@ ffi_export!(
 
             read_raw_pointer(&_env, m.j().unwrap() as *const FieldElement)
         };
+        
 
         //Sign message and return opaque pointer to sig
         let signature = match schnorr_sign(message, secret_key, public_key) {
             Ok(sig) => sig,
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
             }
         };
@@ -775,6 +781,8 @@ ffi_export!(
             read_raw_pointer(&_env, sig.j().unwrap() as *const SchnorrSig)
         };
 
+        
+
         //Verify sig
         match schnorr_verify_signature(message, public_key, signature) {
             Ok(result) => {
@@ -786,6 +794,7 @@ ffi_export!(
             }
             Err(e) => {
                 eprintln!("{:?}", e);
+    			eprintln!("{:?}", Backtrace::new());
                 return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
             }
         }
@@ -929,11 +938,14 @@ ffi_export!(
             read_raw_pointer(&_env, h.j().unwrap() as *const FieldHash)
         };
 
+        
+
         //Get digest
         let fe = match finalize_poseidon_hash(digest) {
             Ok(fe) => fe,
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
             }
         };
@@ -1046,6 +1058,8 @@ ffi_export!(
             return JNI_FALSE;
         }
 
+        
+
         match verify_ginger_merkle_path(path, _height as usize, leaf, root) {
             Ok(result) => {
                 if result {
@@ -1056,6 +1070,7 @@ ffi_export!(
             }
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
             }
         }
@@ -1247,6 +1262,8 @@ ffi_export!(
         _height: jint,
         _processing_step: jlong,
     ) -> jobject {
+        
+
         // Create new InMemoryOptimizedMerkleTree Rust side
         let mt = new_ginger_mht(_height as usize, _processing_step as usize);
 
@@ -1260,6 +1277,7 @@ ffi_export!(
             .into_inner(),
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
             }
         }
@@ -1288,10 +1306,13 @@ ffi_export!(
             read_mut_raw_pointer(&_env, t.j().unwrap() as *mut GingerMHT)
         };
 
+        
+
         match append_leaf_to_ginger_mht(tree, leaf) {
             Ok(_) => JNI_TRUE,
             Err(e) => {
                 eprintln!("{:?}", e);
+    			eprintln!("{:?}", Backtrace::new());
                 return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
             }
         }
@@ -1311,6 +1332,8 @@ ffi_export!(
             read_raw_pointer(&_env, t.j().unwrap() as *const GingerMHT)
         };
 
+        
+
         match finalize_ginger_mht(tree) {
             Ok(tree_copy) => return_jobject(
                 &_env,
@@ -1320,6 +1343,7 @@ ffi_export!(
             .into_inner(),
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
             }
         }
@@ -1339,10 +1363,13 @@ ffi_export!(
             read_mut_raw_pointer(&_env, t.j().unwrap() as *mut GingerMHT)
         };
 
+        
+
         match finalize_ginger_mht_in_place(tree) {
             Ok(_) => JNI_TRUE,
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
             }
         }
@@ -1580,6 +1607,8 @@ ffi_export!(
             read_raw_pointer(&_env, m.j().unwrap() as *const FieldElement)
         };
 
+        
+
         //Compute vrf proof
         let (proof, vrf_out) = match vrf_prove(message, secret_key, public_key) {
             Ok((proof, vrf_out)) => (
@@ -1588,6 +1617,7 @@ ffi_export!(
             ),
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
             }
         };
@@ -1679,11 +1709,14 @@ ffi_export!(
             read_raw_pointer(&_env, p.j().unwrap() as *const VRFProof)
         };
 
+        
+
         //Verify vrf proof and get vrf output
         let vrf_out = match vrf_proof_to_hash(message, public_key, proof) {
             Ok(result) => result,
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
             }
         };
@@ -1740,11 +1773,14 @@ ffi_export!(
         //Extract threshold
         let threshold = _threshold as u64;
 
+        
+
         //Compute constant
         match compute_pks_threshold_hash(pks.as_slice(), threshold) {
             Ok(constant) => return_field_element(&_env, constant),
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
             }
         }
@@ -1830,6 +1866,8 @@ ffi_export!(
             read_raw_pointer(&_env, f.j().unwrap() as *const FieldElement)
         };
 
+        
+
         //Compute message to sign:
         let msg = match compute_msg_to_sign(
             sc_id,
@@ -1842,6 +1880,7 @@ ffi_export!(
             Ok((_, msg)) => msg,
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
             }
         };
@@ -1879,6 +1918,8 @@ ffi_export!(
         // Get proving system type
         let proving_system = get_proving_system_type(&_env, _proving_system);
 
+        
+
         // Generate DLOG keypair
         match init_dlog_keys(
             proving_system,
@@ -1888,6 +1929,7 @@ ffi_export!(
             Ok(_) => JNI_TRUE,
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
             }
         }
@@ -1911,6 +1953,8 @@ ffi_export!(
             .get_string(_verification_key_path)
             .expect("Should be able to read jstring as Rust String");
 
+        
+
         // Deserialize vk
         let vk: ZendooVerifierKey = match read_from_file(
             Path::new(vk_path.to_str().unwrap()),
@@ -1920,6 +1964,7 @@ ffi_export!(
             Ok(vk) => vk,
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return JNI_FALSE;
             }
         };
@@ -1987,6 +2032,8 @@ ffi_export!(
         // Read zk value
         let zk = _zk == JNI_TRUE;
 
+        
+
         // Generate snark keypair
         match generate_circuit_keypair(
             circ,
@@ -2002,6 +2049,7 @@ ffi_export!(
             Ok(_) => JNI_TRUE,
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 JNI_FALSE
             }
         }
@@ -2027,6 +2075,8 @@ ffi_export!(
             .get_string(_proving_key_path)
             .expect("Should be able to read jstring as Rust String");
 
+        
+
         match read_from_file::<ProvingSystem>(
             Path::new(proving_key_path.to_str().unwrap()),
             None,
@@ -2035,6 +2085,7 @@ ffi_export!(
             Ok(ps) => get_proving_system_type_as_jint(&_env, ps),
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return 1_i32; //CRYPTO_ERROR or IO_ERROR
             }
         }
@@ -2052,6 +2103,8 @@ ffi_export!(
             .get_string(_verifier_key_path)
             .expect("Should be able to read jstring as Rust String");
 
+        
+
         match read_from_file::<ProvingSystem>(
             Path::new(verifier_key_path.to_str().unwrap()),
             None,
@@ -2060,6 +2113,7 @@ ffi_export!(
             Ok(ps) => get_proving_system_type_as_jint(&_env, ps),
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return 1_i32; //CRYPTO_ERROR or IO_ERROR
             }
         }
@@ -2202,6 +2256,8 @@ ffi_export!(
             .get_string(_proving_key_path)
             .expect("Should be able to read jstring as Rust String");
 
+        
+
         //create proof
         let (proof, quality) = match create_naive_threshold_sig_proof(
             pks.as_slice(),
@@ -2222,6 +2278,7 @@ ffi_export!(
             Ok(proof) => proof,
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
             }
         };
@@ -2262,10 +2319,13 @@ ffi_export!(
             .convert_byte_array(_proof)
             .expect("Should be able to convert to Rust byte array");
 
+        
+
         match deserialize_from_buffer::<ProvingSystem>(&proof_bytes[..1], None, None) {
             Ok(ps) => get_proving_system_type_as_jint(&_env, ps),
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return 1_i32; //CRYPTO_ERROR or IO_ERROR
             }
         }
@@ -2378,6 +2438,8 @@ ffi_export!(
             .get_string(_verification_key_path)
             .expect("Should be able to read jstring as Rust String");
 
+        
+
         //Verify proof
         match verify_naive_threshold_sig_proof(
             constant,
@@ -2404,6 +2466,7 @@ ffi_export!(
             }
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 JNI_FALSE
             }
         }
@@ -2462,12 +2525,15 @@ ffi_export!(
         _cert_verification_key: jbyteArray,
         _csw_verification_key_nullable: jbyteArray, // can be null if there is no key for CSWs
     ) -> jboolean {
+        
+
         let sc_id = {
             let sc_id_bytes = parse_jbyte_array_to_vec(&_env, &_sc_id, FIELD_SIZE);
             match FieldElement::deserialize(sc_id_bytes.as_slice()) {
                 Ok(fe) => fe,
                 Err(e) => {
                     eprintln!("{:?}", e);
+			        eprintln!("{:?}", Backtrace::new());
                     return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
                 }
             }
@@ -2570,6 +2636,8 @@ ffi_export!(
             None
         };
 
+        
+
         // let constant_fe;
         let constant = if _constant_nullable.is_null() {
             Option::None
@@ -2579,6 +2647,7 @@ ffi_export!(
                 Ok(constant_fe) => Option::Some(constant_fe),
                 Err(e) => {
                     eprintln!("{:?}", e);
+			        eprintln!("{:?}", Backtrace::new());
                     return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
                 }
             }
@@ -3493,6 +3562,8 @@ ffi_export!(
             .convert_byte_array(_proof_bytes)
             .expect("Should be able to convert to Rust byte array");
 
+        
+
         match ScExistenceProof::deserialize(proof_bytes.as_slice()) {
             Ok(sc_existence_proof) => {
                 let proof_ptr: jlong =
@@ -3510,6 +3581,7 @@ ffi_export!(
             }
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
             }
         }
@@ -3604,6 +3676,8 @@ ffi_export!(
             .convert_byte_array(_proof_bytes)
             .expect("Should be able to convert to Rust byte array");
 
+        
+
         match ScAbsenceProof::deserialize(proof_bytes.as_slice()) {
             Ok(sc_absence_proof) => {
                 let proof_ptr: jlong =
@@ -3621,6 +3695,7 @@ ffi_export!(
             }
             Err(e) => {
                 eprintln!("{:?}", e);
+			    eprintln!("{:?}", Backtrace::new());
                 return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
             }
         }

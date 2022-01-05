@@ -29,6 +29,7 @@ radix_trie = "=0.2.1"
 rand = { version = "=0.8.4" }
 rand_xorshift = { version = "=0.3.0" }
 blake2 = { version = "=0.8.1", default-features = false }
+backtrace = "0.3"
 
 [lib]
 name = "zendoo_sc"
