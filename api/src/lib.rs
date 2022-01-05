@@ -96,7 +96,10 @@ fn deserialize_to_jobject<T: CanonicalDeserialize + SemanticallyValid>(
 
     match obj {
         Ok(obj) => *return_jobject(&_env, obj, class_path),
-        Err(_) => std::ptr::null::<jobject>() as jobject,
+        Err(e) => {
+            eprintln!("{:?}", e);
+            return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
+        }
     }
 }
 
@@ -685,7 +688,10 @@ ffi_export!(
         //Sign message and return opaque pointer to sig
         let signature = match schnorr_sign(message, secret_key, public_key) {
             Ok(sig) => sig,
-            Err(_) => return std::ptr::null::<jobject>() as jobject, //CRYPTO_ERROR
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
+            }
         };
 
         return_jobject(
@@ -778,7 +784,10 @@ ffi_export!(
                     JNI_FALSE
                 }
             }
-            Err(_) => JNI_FALSE, //CRYPTO_ERROR
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
+            }
         }
     }
 );
@@ -923,7 +932,10 @@ ffi_export!(
         //Get digest
         let fe = match finalize_poseidon_hash(digest) {
             Ok(fe) => fe,
-            Err(_) => return std::ptr::null::<jobject>() as jobject, //CRYPTO_ERROR
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
+            }
         };
 
         return_field_element(&_env, fe)
@@ -1042,7 +1054,10 @@ ffi_export!(
                     JNI_FALSE
                 }
             }
-            Err(_) => JNI_FALSE, // CRYPTO_ERROR
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
+            }
         }
     }
 );
@@ -1243,7 +1258,10 @@ ffi_export!(
                 "com/horizen/merkletreenative/InMemoryOptimizedMerkleTree",
             )
             .into_inner(),
-            Err(_) => std::ptr::null::<jobject>() as jobject, //CRYPTO_ERROR
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
+            }
         }
     }
 );
@@ -1272,7 +1290,10 @@ ffi_export!(
 
         match append_leaf_to_ginger_mht(tree, leaf) {
             Ok(_) => JNI_TRUE,
-            Err(_) => JNI_FALSE,
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
+            }
         }
     }
 );
@@ -1297,7 +1318,10 @@ ffi_export!(
                 "com/horizen/merkletreenative/InMemoryOptimizedMerkleTree",
             )
             .into_inner(),
-            Err(_) => std::ptr::null::<jobject>() as jobject, //CRYPTO_ERROR
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
+            }
         }
     }
 );
@@ -1317,7 +1341,10 @@ ffi_export!(
 
         match finalize_ginger_mht_in_place(tree) {
             Ok(_) => JNI_TRUE,
-            Err(_) => JNI_FALSE,
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
+            }
         }
     }
 );
@@ -1559,7 +1586,10 @@ ffi_export!(
                 return_jobject(&_env, proof, "com/horizen/vrfnative/VRFProof"),
                 return_jobject(&_env, vrf_out, "com/horizen/librustsidechains/FieldElement"),
             ),
-            Err(_) => return std::ptr::null::<jobject>() as jobject, //CRYPTO_ERROR
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
+            }
         };
 
         //Create and return VRFProveResult instance
@@ -1652,7 +1682,10 @@ ffi_export!(
         //Verify vrf proof and get vrf output
         let vrf_out = match vrf_proof_to_hash(message, public_key, proof) {
             Ok(result) => result,
-            Err(_) => return std::ptr::null::<jobject>() as jobject, //CRYPTO_ERROR
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
+            }
         };
 
         //Return vrf output
@@ -1710,7 +1743,10 @@ ffi_export!(
         //Compute constant
         match compute_pks_threshold_hash(pks.as_slice(), threshold) {
             Ok(constant) => return_field_element(&_env, constant),
-            Err(_) => std::ptr::null::<jobject>() as jobject, //CRYPTO_ERROR
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
+            }
         }
     }
 );
@@ -1804,7 +1840,10 @@ ffi_export!(
             bt_list,
         ) {
             Ok((_, msg)) => msg,
-            Err(_) => return std::ptr::null::<jobject>() as jobject, //CRYPTO_ERROR
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
+            }
         };
 
         //Return msg
@@ -1847,7 +1886,10 @@ ffi_export!(
             _supported_segment_size as usize,
         ) {
             Ok(_) => JNI_TRUE,
-            Err(_) => JNI_FALSE,
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
+            }
         }
     }
 );
@@ -1877,7 +1919,7 @@ ffi_export!(
         ) {
             Ok(vk) => vk,
             Err(e) => {
-                println!("{:?}", e);
+                eprintln!("{:?}", e);
                 return JNI_FALSE;
             }
         };
@@ -1959,7 +2001,7 @@ ffi_export!(
         ) {
             Ok(_) => JNI_TRUE,
             Err(e) => {
-                println!("{:?}", e);
+                eprintln!("{:?}", e);
                 JNI_FALSE
             }
         }
@@ -1991,7 +2033,10 @@ ffi_export!(
             None,
         ) {
             Ok(ps) => get_proving_system_type_as_jint(&_env, ps),
-            Err(_) => 1_i32,
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return 1_i32; //CRYPTO_ERROR or IO_ERROR
+            }
         }
     }
 );
@@ -2013,7 +2058,10 @@ ffi_export!(
             None,
         ) {
             Ok(ps) => get_proving_system_type_as_jint(&_env, ps),
-            Err(_) => 1_i32,
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return 1_i32; //CRYPTO_ERROR or IO_ERROR
+            }
         }
     }
 );
@@ -2172,7 +2220,10 @@ ffi_export!(
             _compress_proof == JNI_TRUE,
         ) {
             Ok(proof) => proof,
-            Err(_) => return std::ptr::null::<jobject>() as jobject, //CRYPTO_ERROR or IO_ERROR
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
+            }
         };
 
         //Return proof serialized
@@ -2213,7 +2264,10 @@ ffi_export!(
 
         match deserialize_from_buffer::<ProvingSystem>(&proof_bytes[..1], None, None) {
             Ok(ps) => get_proving_system_type_as_jint(&_env, ps),
-            Err(_) => 1_i32,
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return 1_i32; //CRYPTO_ERROR or IO_ERROR
+            }
         }
     }
 );
@@ -2348,7 +2402,10 @@ ffi_export!(
                     JNI_FALSE
                 }
             }
-            Err(_) => JNI_FALSE, // CRYPTO_ERROR or IO_ERROR
+            Err(e) => {
+                eprintln!("{:?}", e);
+                JNI_FALSE
+            }
         }
     }
 );
@@ -2409,7 +2466,10 @@ ffi_export!(
             let sc_id_bytes = parse_jbyte_array_to_vec(&_env, &_sc_id, FIELD_SIZE);
             match FieldElement::deserialize(sc_id_bytes.as_slice()) {
                 Ok(fe) => fe,
-                Err(_) => return JNI_FALSE,
+                Err(e) => {
+                    eprintln!("{:?}", e);
+                    return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
+                }
             }
         };
 
@@ -2517,7 +2577,10 @@ ffi_export!(
             let constant_bytes = parse_jbyte_array_to_vec(&_env, &_constant_nullable, FIELD_SIZE);
             match FieldElement::deserialize(constant_bytes.as_slice()) {
                 Ok(constant_fe) => Option::Some(constant_fe),
-                Err(_) => return JNI_FALSE,
+                Err(e) => {
+                    eprintln!("{:?}", e);
+                    return JNI_FALSE; //CRYPTO_ERROR or IO_ERROR
+                }
             }
         };
 
@@ -3445,7 +3508,10 @@ ffi_export!(
 
                 *jep
             }
-            Err(_) => std::ptr::null::<jobject>() as jobject,
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
+            }
         }
     }
 );
@@ -3553,7 +3619,10 @@ ffi_export!(
 
                 *jep
             }
-            Err(_) => std::ptr::null::<jobject>() as jobject,
+            Err(e) => {
+                eprintln!("{:?}", e);
+                return std::ptr::null::<jobject>() as jobject; //CRYPTO_ERROR or IO_ERROR
+            }
         }
     }
 );
