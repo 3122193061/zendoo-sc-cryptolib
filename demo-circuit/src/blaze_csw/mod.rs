@@ -4,6 +4,7 @@
 //! before the last valid certificate before ceasing (The epoch between these two certificates is
 //! considered as reverted).
 pub mod constraints;
+pub use self::constraints::*;
 
 pub mod data_structures;
 pub use self::data_structures::*;

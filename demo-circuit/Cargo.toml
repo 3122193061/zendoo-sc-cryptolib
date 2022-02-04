@@ -27,6 +27,7 @@ lazy_static = "=1.4.0"
 radix_trie = "=0.2.1"
 rand = { version = "=0.8.4" }
 blake2 = { version = "=0.8.1", default-features = false }
+criterion = "=0.3.5"
 
 [dev-dependencies]
 digest = "=0.8.1"
@@ -39,3 +40,8 @@ serial_test = "=0.5.1"
 [features]
 default = [ "asm" ]
 asm = [ "algebra/llvm_asm", "cctp_primitives/asm", "primitives/llvm_asm" ]
+
+[[bench]]
+name = "csw"
+harness = false
+required-features = ["asm"]

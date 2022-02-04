@@ -19,7 +19,7 @@ pub mod data_structures;
 #[derive(Clone)]
 pub struct CeasedSidechainWithdrawalCircuit {
     /// The range size (number of MC blocks) for a ft withdrawal
-    range_size: u32,
+    pub range_size: u32,
     num_custom_fields: u32,
     sidechain_id: FieldElement,
     /// The (pre-images of the) public inputs
@@ -41,7 +41,7 @@ pub struct CeasedSidechainWithdrawalCircuit {
 }
 
 impl CeasedSidechainWithdrawalCircuit {
-    fn compute_csw_sys_data_hash(
+    pub fn compute_csw_sys_data_hash(
         sys_data: &CswSysData,
         sidechain_id: FieldElement,
     ) -> Result<FieldElement, Error> {
