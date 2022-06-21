@@ -1,0 +1,23 @@
+#!/bin/bash
+# shellcheck disable=SC2086
+
+set -eo pipefail
+retval=0
+
+# Running cargo tests
+echo "" && echo "=== Running cargo tests ===" && echo ""
+cargo $CARGOARGS test --all-features || retval="$?"
+
+# Running cargo clean
+echo "" && echo "=== Running cargo clean ===" && echo ""
+if grep -q 'Cargo.lock' .gitignore &> /dev/null; then
+  rm -f Cargo.lock
+fi
+cargo $CARGOARGS clean
+
+# Running cargo build
+echo "" && echo "=== Running cargo build ===" && echo ""
+cargo $CARGOARGS build -j$(($(nproc)+1)) --release --target=x86_64-pc-windows-gnu || retval="$?"
+cargo $CARGOARGS build -j$(($(nproc)+1)) --release --target=x86_64-unknown-linux-gnu || retval="$?"
+
+exit "$retval"
