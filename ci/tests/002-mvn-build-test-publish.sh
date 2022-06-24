@@ -11,11 +11,12 @@ cp target/x86_64-unknown-linux-gnu/release/libzendoo_sc.so jni/src/main/resource
 mkdir -p jni/src/main/resources/native/windows64
 cp target/x86_64-pc-windows-gnu/release/zendoo_sc.dll jni/src/main/resources/native/windows64/zendoo_sc.dll
 
-cd jni && mvn clean package -DskipTests=true -B || retval="$?"
+cd jni
+mvn clean package -DskipTests=true -B || retval="$?"
 
 # Running mvn tests
 echo "" && echo "=== Running maven build tests ===" && echo ""
-cd jni && mvn test -B || retval="$?"
+mvn test -B || retval="$?"
 
 # Publishing if a release build
 if [ "$CONTAINER_PUBLISH" = "true" ]; then
@@ -23,7 +24,7 @@ if [ "$CONTAINER_PUBLISH" = "true" ]; then
   echo "|              Deploying sdk bundle to maven repository              |"
   echo "======================================================================"
   echo
-  cd jni && mvn deploy -P sign,build-extras --settings ../ci/mvn_settings.xml -DskipTests=true -B || retval="$?"
+  mvn deploy -P sign,build-extras --settings ../ci/mvn_settings.xml -DskipTests=true -B || retval="$?"
 else
   echo "This is NOT a release build. CONTAINER_PUBLISH variable is set to ${CONTAINER_PUBLISH}."
 fi

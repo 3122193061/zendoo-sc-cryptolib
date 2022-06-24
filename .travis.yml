@@ -22,11 +22,5 @@ script:
 
 jobs:
   include:
-#    - name: rust_1.51
-#      env: IMAGE_TAG='bionic_rust-1.51.0_jdk-11_latest' TESTS='000,001,002'
-#    - name: rust_1.51_asm
-#      env: IMAGE_TAG='bionic_rust-1.51.0_jdk-11_latest' RUSTFLAGS='--emit=asm' TESTS='000,001,002'
     - name: rust_1.51_asm_target-feature
       env: IMAGE_TAG='bionic_rust-1.51.0_jdk-11_latest' RUSTFLAGS='-C target-feature=+bmi2,+adx --emit=asm' TESTS='000,001,002'
-#    - name: rust_nightly
-#      env: IMAGE_TAG='bionic_rust-nightly-2021-04-25_jdk-11_latest' RUSTFLAGS='-C target-feature=+bmi2,+adx --emit=asm' TESTS='000,001,002'
