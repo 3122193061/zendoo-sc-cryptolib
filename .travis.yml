@@ -22,5 +22,10 @@ script:
 
 jobs:
   include:
-    - name: rust_1.51_asm_target-feature
-      env: IMAGE_TAG='bionic_rust-1.51.0_jdk-11_latest' RUSTFLAGS='-C target-feature=+bmi2,+adx --emit=asm' TESTS='000,001,002'
+    - name: rust_1.51_asm_target-feature_cargo_test
+      env: IMAGE_TAG='bionic_rust-1.51.0_jdk-11_latest' RUSTFLAGS='-C target-feature=+bmi2,+adx --emit=asm' TESTS='000,002'
+    - name: rust_1.51_asm_target-feature_mvn_test
+      env: IMAGE_TAG='bionic_rust-1.51.0_jdk-11_latest' RUSTFLAGS='-C target-feature=+bmi2,+adx --emit=asm' TESTS='001,003'
+    - name: rust_1.51_asm_target-feature_mvn_release
+      if: tag IS present
+      env: IMAGE_TAG='bionic_rust-1.51.0_jdk-11_latest' RUSTFLAGS='-C target-feature=+bmi2,+adx --emit=asm' TESTS='000,001,002,003'
